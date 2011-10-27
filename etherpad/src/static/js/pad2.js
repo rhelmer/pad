@@ -70,6 +70,16 @@ var pad = {
         doc.execCommand("BackgroundImageCache", false, true);
       } catch (e) {}
     }
+    
+    // for iOS 5
+
+    var deviceAgent = navigator.userAgent.toLowerCase();
+    var iOS = deviceAgent.match(/(iphone|ipod|ipad)/);
+    
+    if(iOS)
+    {
+        $('#editorcontainer').attr('style', 'overflow-y: scroll; overflow-x: hidden; -webkit-overflow-scrolling: touch;');
+    }
 
     // order of inits is important here:
 

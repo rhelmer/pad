@@ -187,6 +187,7 @@ function Ace2Editor() {
 	'{ window.onload = null; setTimeout'+
 	'(function() '+
 	'{ var iframe = document.createElement("IFRAME"); '+
+	'var deviceAgent = navigator.userAgent.toLowerCase(); var iOS = deviceAgent.match(/(iphone|ipod|ipad)/); if(iOS) { iframe.setAttribute("style", "border: 1px solid transparent;"); }' +
 	'iframe.scrolling = "no"; var outerdocbody = document.getElementById("outerdocbody"); '+
 	'iframe.frameBorder = 0; iframe.allowTransparency = true; '+ // for IE
 	'outerdocbody.insertBefore(iframe, outerdocbody.firstChild); '+
