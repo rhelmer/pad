@@ -26,6 +26,7 @@ limitations under the License. */ %><% helpers.includeCss('pro-signup.css') %>
 
     <form id="pro-act-form"
           method="post" action="<%= request.path %>">
+      <input type="hidden" name="assertion" value="" /> 
 
       <%= errorDiv() %>
 
@@ -48,7 +49,6 @@ limitations under the License. */ %><% helpers.includeCss('pro-signup.css') %>
         <div class="inputdiv">
           <h3>Administrator account</h3>
           <%= inf("fullName", "Full Name") %>
-          <%= inf("email", "Email") %>
         </div>
         <div class="inputhelp">
           Instructions for choosing a password and signing in will
@@ -62,9 +62,9 @@ limitations under the License. */ %><% helpers.includeCss('pro-signup.css') %>
       <p><button type="submit" id="createbutton">Create team site now</button></p>
 
     </form>
-
-    <p style="font-size: 80%;">Existing users: <a href="/ep/pro-account/sign-in">sign in
-    here</a></p>
-  </div>
+  </div> 
 </div>
 
+<% helpers.includeJs("jquery-1.3.2.js") %>
+<script src="https://browserid.org/include.js"></script>
+<% helpers.includeJs("pro/signin-client.js") %>

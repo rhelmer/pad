@@ -23,14 +23,12 @@ limitations under the License. */ %><% helpers.includeCss("pro/account.css") %>
 
   <%= errorDiv() %>
 
-  <%= renderAccountForm('create-admin-account', [
+  renderAccountForm('create-admin-account', [
     {title: "Create Admin Account"},
     {text: "fullName", label: "Full Name:"},
     {text: "email", label: "Email:"},
-    {password: "password", label: "Password:"},
-    {password: "passwordConfirm", label: "Confirm Password:"},
     {submit: "Create Account"}
-  ]) %>
+  ]) 
 
   </div>
 </div>

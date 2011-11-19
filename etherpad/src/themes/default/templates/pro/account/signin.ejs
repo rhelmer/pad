@@ -22,6 +22,7 @@ limitations under the License. */ %><% helpers.includeJQuery() %>
   <%= signinNotice() %>
 
   <form id="signin-form" action="<%= request.path + '?' + request.query %>" method="post">
+  <input type="hidden" name="assertion" value="" /> 
   <div class="bb bb-signin">
     <div class="bb-top">
       <div class="bb-topleft"><!-- --></div>
@@ -31,27 +32,22 @@ limitations under the License. */ %><% helpers.includeJQuery() %>
     <div class="bb-in">
       <%= errorDiv() %>
       <div>
-        <label for="email" id="email-label">Email</label>
-        <input class="textin" type="text" name="email" id="email" value="<%= email
-        %>" />
         <%= helpers.clearFloats() %>
       </div>
 
       <div>
-        <label for="password" id="password-label">Password</label>
-        <input class="passin" type="password" name="password"
-        id="password"
-        value="<%= password
-        %>" />
+        <div id="welcome-browserid" class='one-time-alert' style="display: none">
+          <h3>Signin with BrowserID</h3>
+          <p>We've upgraded how you login.<br /><strong>Say buh bye to passwords</strong> and use
+             BrowserID across the web.</p>
+<p>Use the <strong>same email address</strong> you've always <strong>used on Mopad</strong>.</p>
+          <p>Thanks,<br />
+             Etherpad team</p>
+        </div>
         <%= helpers.clearFloats() %>
       </div>
 
       <div>
-        <input type="checkbox" id="rememberMe" name="rememberMe"
-          <%= (rememberMe ? 'checked="on"' : '') %> />
-        <label for="rememberMe" id="rememberMe-label">Remember me on this
-        computer</label>
-
         <button type="submit" class="bluebutton bluebutton120" id="signInButton">
           Sign In
         </button>
@@ -62,25 +58,12 @@ limitations under the License. */ %><% helpers.includeJQuery() %>
   </div>
   </form>
 
-  <% if (showGuestBox) { %>
-    <form action="/ep/account/guest-sign-in"
-          id="guest-signin-choice"
-          method="get">
-      <input type="hidden" name="padId" value="<%= toHTML(localPadId) %>" />
-      Guests: <button type="submit">Request Guest Access</button>
-    </form>
-  <% } %>
-
   <div id="bottom-text">
       <a
       href="/ep/account/request-account">Request new account</a>
-  </div>
-  <div id="bottom-text">
-      <a
-      href="/ep/account/forgot-password">Recover lost
-      password</a>
   </div>
 
   </div>
 </div>
 
+<script src="https://browserid.org/include.js"></script>

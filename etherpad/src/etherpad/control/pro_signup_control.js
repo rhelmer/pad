@@ -28,6 +28,7 @@ import("etherpad.pro.pro_accounts");
 import("etherpad.pro.domains");
 
 import("etherpad.control.pro_beta_control");
+import("etherpad.control.pro.account_control");
 import("etherpad.control.pro.admin.account_manager_control");
 
 import("etherpad.helpers");
@@ -67,6 +68,7 @@ function _inf(id, label, type) {
 }
 
 function render_main_get() {
+  println("pro_signup_control.js render_main_get");
   // observe activation code
   if (request.params.sc) {
     getSession().betaActivationCode = request.params.sc;
@@ -100,7 +102,9 @@ function _err(m) {
 function render_main_post() {
   var subdomain = trim(String(request.params.subdomain).toLowerCase());
   var fullName = request.params.fullName;
-  var email = trim(request.params.email).toLowerCase();
+  var assertion = request.params.assertion;
+  var audience = account_control.get_audience();
+  var email = pro_accounts.verify(assertion, audience);
 
   // validate activation code
   var activationCode = getSession().betaActivationCode;
@@ -109,10 +113,6 @@ function render_main_post() {
     resonse.write(err);
   }
 
-  /*
-  var password = request.params.password;
-  var passwordConfirm = request.params.passwordConfirm;
-  */
   var orgName = subdomain;
 
   //---- basic validation ----
@@ -126,15 +126,8 @@ function render_main_post() {
     _err("Subdomain must be <= 60 characters.");
   }
 
-/*
-  if (password != passwordConfirm) {
-    _err("Passwords do not match.");
-  }
-  */
-
   _err(pro_accounts.validateFullName(fullName));
   _err(pro_accounts.validateEmail(email));
-//  _err(pro_accounts.validatePassword(password));
 
   //---- database validation ----
 

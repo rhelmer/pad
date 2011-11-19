@@ -62,7 +62,6 @@ limitations under the License. */ %><% function formField(id, label, type) {
       <div class="forminner">
         <%= formField('email', 'Email:', 'text') %>
         <%= formField('fullName', 'Full Name:', 'text') %>
-        <%= formField('tempPass', 'Temporary Password:', 'temppass') %>
         <%= formField('makeAdmin', 'Make this account an administrator?', 'checkbox') %>
       </div>
 
@@ -75,8 +74,7 @@ limitations under the License. */ %><% function formField(id, label, type) {
 
   </form>
 
-  <p id="bottom-note">An email will be sent to this account with a link to sign in.
-    They will be prompted to change their password the first time they sign in.</p>
+  <p id="bottom-note">An email will be sent to this account with a link to sign in.</p>
   </p>
   
 </div>

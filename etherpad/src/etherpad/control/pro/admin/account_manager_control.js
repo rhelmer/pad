@@ -130,42 +130,33 @@ function render_new_post() {
 
   var fullName = request.params.fullName;
   var email = trim(request.params.email).toLowerCase();
-  var tempPass = request.params.tempPass;
   var makeAdmin = !!request.params.makeAdmin;
 
   getSession().accountManagerFormData = {
     fullName: fullName,
     email: email,
-    tempPass: tempPass,
     makeAdmin: makeAdmin
   };
 
-  // validation
-  if (!tempPass) {
-    tempPass = stringutils.randomString(6);
-  }
-
   _err(pro_accounts.validateEmail(email));
   _err(pro_accounts.validateFullName(fullName));
-  _err(pro_accounts.validatePassword(tempPass));
 
   var existingAccount = pro_accounts.getAccountByEmail(email, null);
   if (existingAccount) {
     _err("There is already a account with that email address.");
   }
 
-  pro_accounts.createNewAccount(null, fullName, email, tempPass, makeAdmin);
+  pro_accounts.createNewAccount(null, fullName, email, makeAdmin);
   var account = pro_accounts.getAccountByEmail(email, null);
 
-  pro_accounts.setTempPassword(account, tempPass);
-  sendWelcomeEmail(account, tempPass);
+  sendWelcomeEmail(account);
 
   delete getSession().accountManagerFormData;
   getSession().accountManagerMessage = "Account "+fullName+" ("+email+") created successfully.";
   response.redirect('/ep/admin/account-manager/');
 }
 
-function sendWelcomeEmail(account, tempPass) {
+function sendWelcomeEmail(account) {
   var subj = "Welcome to "+ appjet.config.customBrandingName +" on "+pro_utils.getFullProDomain()+"!";
   var toAddr = account.email;
   var fromAddr = pro_utils.getEmailFromAddr();
@@ -173,7 +164,7 @@ function sendWelcomeEmail(account, tempPass) {
   var body = renderTemplateAsString('pro/account/account-welcome-email.ejs', {
     account: account,
     adminAccount: getSessionProAccount(),
-    signinLink: pro_accounts.getTempSigninUrl(account, tempPass),
+    signinLink: pro_accounts.getTempSigninUrl(account),
     toEmail: toAddr,
     siteName: pro_config.getConfig().siteName
   });

@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 $(document).ready(function() {
-  if ($("#signin-form").length > 0) {
-    $("#email").focus();
-  }
-  if ($("#guest-signin-form").length > 0) {
-    $("#guestDisplayName").focus();
-  }
+    $('#signInButton, #createbutton').click(
+        function (event) {
+            event.preventDefault();
+            var form = $(this).parents('form');
+            navigator.id.getVerifiedEmail(
+                function (assertion) {
+                    if (assertion) {
+                        $('input[name=assertion]', form).attr('value', assertion);
+                        form.submit();
+                    }
+                });
+        });
+    $('.one-time-alert').each(function () {
+        var id = $(this).attr('id'),
+            div_id = 'one-time-alter-' + id;
+        if (! localStorage.getItem(div_id)) {
+            $('#' + id).show('slow');
+            localStorage.setItem(div_id, true);
+        }
+    });
 });
-
-

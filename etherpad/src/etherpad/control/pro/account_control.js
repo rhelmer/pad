@@ -142,25 +142,6 @@ function render_update_password_get() {
   response.redirect('/ep/account/');
 }
 
-function render_update_password_post() {
-  var password = request.params.password;
-  var passwordConfirm = request.params.passwordConfirm;
-
-  if (password != passwordConfirm) { _redirOnError('Passwords did not match.'); }
-
-  _redirOnError(pro_accounts.validatePassword(password));
-  
-  pro_accounts.setPassword(getSessionProAccount(), password);
-
-  if (getSession().changePass) {
-    delete getSession().changePass;
-    response.redirect('/');
-  }
-
-  getSession().accountMessage = "Password updated.";
-  response.redirect('/ep/account/');
-}
-
 //--------------------------------------------------------------------------------
 // signin/signout
 //--------------------------------------------------------------------------------
@@ -194,7 +175,6 @@ function render_sign_in_get() {
     domain: pro_utils.getFullProDomain(),
     siteName: toHTML(pro_config.getConfig().siteName),
     email: getSession().tempFormData.email || "",
-    password: getSession().tempFormData.password || "",
     rememberMe: getSession().tempFormData.rememberMe || false,
     showGuestBox: showGuestBox,
     localPadId: request.params.padId
@@ -216,15 +196,19 @@ function _attemptInstantSignin(key) {
   _redirOnError(pro_accounts.authenticateSignIn(email, password), true);
 }
 
+function get_audience () {
+  return request.scheme + "://" + request.host;
+}
+
 function render_sign_in_post() {
-  var email = trim(request.params.email).toLowerCase();
-  var password = request.params.password;
 
-  getSession().tempFormData.email = email;
-  getSession().tempFormData.rememberMe = request.params.rememberMe;
+  var assertion = request.params.assertion;
+  var audience = get_audience();
 
-  _redirOnError(pro_accounts.authenticateSignIn(email, password));
-  pro_account_auto_signin.setAutoSigninCookie(request.params.rememberMe);
+  getSession().tempFormData.assertion = assertion;
+  getSession().tempFormData.audience = audience;
+
+  _redirOnNotice(pro_accounts.authenticateBrowserIDSignIn(assertion, audience));
   _redirectToPostSigninDestination();
 }
 
@@ -297,13 +281,18 @@ function render_request_account_post() {
                 toEmail: toAddr,
                 siteName: pro_utils.getFullProDomain()
             });
+            var msg = "Account requested! You will get an email on success!";
             
             try {
                 sendEmail(toAddr, fromAddr, subj, {}, body);
             } catch (ex) {
                 _redirOnError("Warning: unable to send request account email!");
             }
-            _redirOnNotice("Account requested! You will get an email on success!");
+            if (pro_accounts.shouldAutoCreateAccount(email, domainId)) {
+                msg = "Account requested, but your email address " + email +
+                      " should be good to go on this team pad. Try to log in instead.";
+            }
+            _redirOnNotice(msg);
         });
     }
     else
@@ -403,20 +392,20 @@ function render_create_admin_account_get() {
 
 function render_create_admin_account_post() {
   var email = trim(request.params.email).toLowerCase();
-  var password = request.params.password;
-  var passwordConfirm = request.params.passwordConfirm;
   var fullName = request.params.fullName;
+
+  if (pro_accounts.doesAdminExist()) {
+    renderFramedError("An admin account already exists on this domain.");
+    response.stop();
+  }
 
   getSession().tempFormData.email = email;
   getSession().tempFormData.fullName = fullName;
 
-  if (password != passwordConfirm) { _redirOnError('Passwords did not match.'); }
-
   _redirOnError(pro_accounts.validateEmail(email));
   _redirOnError(pro_accounts.validateFullName(fullName));
-  _redirOnError(pro_accounts.validatePassword(password));
 
-  pro_accounts.createNewAccount(null, fullName, email, password, true);
+  pro_accounts.createNewAccount(null, fullName, email, true);
 
   var u = pro_accounts.getAccountByEmail(email, null);
 
@@ -427,46 +416,4 @@ function render_create_admin_account_post() {
 
   response.redirect("/");
 }
-
-
-//--------------------------------------------------------------------------------
-// forgot password
-//--------------------------------------------------------------------------------
-
-function render_forgot_password_get() {
-  if (request.params.instantSubmit && request.params.email) {
-    render_forgot_password_post();
-  } else {
-    _renderTemplate('forgot-password', {
-      email: getSession().tempFormData.email || ""
-    });
-  }
-}
-
-function render_forgot_password_post() {
-  var email = trim(request.params.email).toLowerCase();
-
-  getSession().tempFormData.email = email;
-
-  var u = pro_accounts.getAccountByEmail(email, null);
-  if (!u) {
-    _redirOnError("Account not found: "+email);
-  }
-
-  var tempPass = stringutils.randomString(10);
-  pro_accounts.setTempPassword(u, tempPass);
-
-  var subj = "EtherPad: Request to reset your password on "+request.domain;
-  var body = renderTemplateAsString('pro/account/forgot-password-email.ejs', {
-    account: u,
-    recoverUrl: pro_accounts.getTempSigninUrl(u, tempPass)
-  });
-  var fromAddr = pro_utils.getEmailFromAddr();
-  sendEmail(u.email, fromAddr, subj, {}, body);
-
-  getSession().accountMessage = "An email has been sent to "+u.email+" with instructions to reset the password.";
-  response.redirect(request.path);
-}
-
-
 

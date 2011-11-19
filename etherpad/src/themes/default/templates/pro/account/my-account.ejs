@@ -42,26 +42,6 @@ limitations under the License. */ %><% helpers.includeCss("pro/account.css") %>
   </form>
 <% } %>
 
-<h2>Password</h2>
-
-<form method="post" action="/ep/account/update-password">
-<table>
-  <tr>
-    <th>New Password:</th>
-    <td class="ti"><%= INPUT({type: 'password', name: 'password', value: ''}) %></td>
-  </tr>
-  <tr>
-    <th>Confirm Password:</th>
-    <td class="ti"><%= INPUT({type: 'password', name: 'passwordConfirm', value: ''}) %></td>
-  </tr>
-  <tr>
-    <td colspan="2" style="text-align: right;">
-      <input type="submit" id="passwordSubmit" value="Update Password" />
-    </td>
-  </tr>
-</table>
-</form>
-
 </div>
 </div>
 

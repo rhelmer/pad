@@ -11,7 +11,7 @@ distributed under the License is distributed on an "AS-IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */ %><% helpers.includeJQuery() %>
-<% helpers.includeJs("pro/signin-client.js") %>
+
 <% helpers.includeCss("pro/account.css") %>
 <% helpers.setHtmlTitle(appjet.config.customBrandingName +": Sign In") %>
 
@@ -63,7 +63,10 @@ limitations under the License. */ %><% helpers.includeJQuery() %>
     </div>
   </div>
   </form>
-
+    <div id="bottom-text">or
+      <a
+      href="/">Log in</a> instead
+    </div>
   </div>
 </div>
 

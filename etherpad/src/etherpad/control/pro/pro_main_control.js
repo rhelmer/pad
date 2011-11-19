@@ -97,9 +97,8 @@ function render_finish_activation_get() {
   }
 
   var acct = accountList[0];
-  var tempPass = stringutils.randomString(10);
-  pro_accounts.setTempPassword(acct, tempPass);
-  account_manager_control.sendWelcomeEmail(acct, tempPass);
+
+  account_manager_control.sendWelcomeEmail(acct);
 
   var domainId = domains.getRequestDomainId();
 
@@ -110,7 +109,7 @@ function render_finish_activation_get() {
   renderNoticeString(
     DIV({style: "font-size: 16pt; border: 1px solid green; background: #eeffee; margin: 2em 4em; padding: 1em;"},
       P("Success!  You will receive an email shortly with instructions."),
-      DIV({style: "display: none;", id: "reference"}, acct.id, ":", tempPass)));
+      DIV({style: "display: none;", id: "reference"}, acct.id)));
 }
 
 function isActivationAllowed() {

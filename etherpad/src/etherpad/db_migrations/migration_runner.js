@@ -70,7 +70,8 @@ var migrations = [
   "m0036_create_missing_subscription_records",
   "m0037_create_pro_referral_table",
   "m0038_pad_coarse_revs",
-  "m0040_create_plugin_tables"
+  "m0040_create_plugin_tables",
+  "m0041_browserid"
 ];
 
 var mscope = this;

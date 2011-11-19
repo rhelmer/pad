@@ -52,92 +52,11 @@ function _redirectError(m) {
 
 
 function render_main_get() {
-  response.redirect('/ep/pro-account/sign-in');
+  response.redirect('/');
 }
 
 function render_sign_in_get() {
-  renderFramed('pro-account/sign-in.ejs', {
-    oldData: getSession().oldFormData,
-    errorDiv: _errorDiv
-  });
-}
-
-
-function render_sign_in_post() {
-  var email = trim(request.params.email).toLowerCase();
-  var password = request.params.password;
-  var subDomain = request.params.subDomain;
-
-  subDomain = subDomain.toLowerCase();
-
-  getSession().oldFormData.email = email;
-  getSession().oldFormData.subDomain = subDomain;
-
-  var domainRecord = domains.getDomainRecordFromSubdomain(subDomain);
-  if (!domainRecord) {
-    _redirectError("Site address not found: "+subDomain+"."+request.host);
-  }
-
-  var instantSigninKey = stringutils.randomString(20);
-  syncedWithCache('global_signin_passwords', function(c) {
-    c[instantSigninKey] = {
-      email: email,
-      password: password
-    };
-  });
-
-  response.redirect(
-    "https://"+subDomain+"."+httpsHost(request.host)+
-    "/ep/account/sign-in?instantSigninKey="+instantSigninKey);
-}
-
-function render_recover_get() {
-  renderFramed('pro-account/recover.ejs', {
-    oldData: getSession().oldFormData,
-    errorDiv: _errorDiv
-  });
-}
-
-function render_recover_post() {
-
-  function _recoverLink(accountRecord, domainRecord) {
-    var host = (domainRecord.subDomain + "." + httpsHost(request.host));
-    return (
-      "https://"+host+"/ep/account/forgot-password?instantSubmit=1&email="+
-      encodeURIComponent(accountRecord.email));
-  }
-
-  var email = trim(request.params.email).toLowerCase();
-
-  // lookup all domains associated with this email
-  var accountList = pro_accounts.getAllAccountsWithEmail(email);
-  println("account records matching ["+email+"]: "+accountList.length);
-
-  var domainList = [];
-  for (var i = 0; i < accountList.length; i++) {
-    domainList[i] = domains.getDomainRecord(accountList[i].domainId);
-  }
-
-  if (accountList.length == 0) {
-    _redirectError("No accounts were found associated with the email address \""+email+"\".");
-  }
-  if (accountList.length == 1) {
-    response.redirect(_recoverLink(accountList[0], domainList[0]));
-  }
-  if (accountList.length > 1) {
-    var fromAddr = '"EtherPad Support" <support@etherpad.com>';
-    var subj = "EtherPad: account information";
-    var body = renderTemplateAsString(
-      'pro/account/global-multi-domain-recover-email.ejs', {
-        accountList: accountList,
-        domainList: domainList,
-        recoverLink: _recoverLink,
-        email: email
-      }
-    );
-    sendEmail(email, fromAddr, subj, {}, body);
-    pro_utils.renderFramedMessage("Instructions have been sent to "+email+".");
-  }
+  response.redirect('/');
 }
 
 

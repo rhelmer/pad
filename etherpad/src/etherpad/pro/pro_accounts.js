@@ -21,6 +21,7 @@ import("sqlbase.sqlobj");
 import("sqlbase.sqlcommon.inTransaction");
 import("email.sendEmail");
 import("cache_utils.syncedWithCache");
+import("netutils.urlPost");
 import("stringutils.*");
 
 import("etherpad.globals.*");
@@ -80,13 +81,8 @@ function validatePassword(p) {
   return null;
 }
 
-function validateEmailDomainPair(email, domainId) {
-  // TODO: make sure the same email address cannot exist more than once within
-  // the same domainid.
-}
-
 /* if domainId is null, then use domainId of current request. */
-function createNewAccount(domainId, fullName, email, password, isAdmin, skipValidation) {
+function createNewAccount(domainId, fullName, email, isAdmin, skipValidation) {
   if (!domainId) {
     domainId = domains.getRequestDomainId();
   }
@@ -101,7 +97,6 @@ function createNewAccount(domainId, fullName, email, password, isAdmin, skipVali
     var e;
     e = validateEmail(email); if (e) { throw Error(e); }
     e = validateFullName(fullName); if (e) { throw Error(e); }
-    e = validatePassword(password); if (e) { throw Error(e); }
   }
 
   // xss normalization
@@ -119,7 +114,6 @@ function createNewAccount(domainId, fullName, email, password, isAdmin, skipVali
       domainId: domainId,
       fullName: fullName,
       email: email,
-      passwordHash: _computePasswordHash(password),
       createdDate: now,
       isAdmin: isAdmin
     };
@@ -153,20 +147,6 @@ function _checkAccess(account) {
   if (account.domainId != domains.getRequestDomainId()) {
     throw Error("access denied");
   }
-}
-
-function setPassword(account, newPass) {
-  _checkAccess(account);
-  var passHash = _computePasswordHash(newPass);
-  sqlobj.update('pro_accounts', {id: account.id}, {passwordHash: passHash});
-  markDirtySessionAccount(account.id);
-}
-
-function setTempPassword(account, tempPass) {
-  _checkAccess(account);
-  var tempPassHash = _computePasswordHash(tempPass);
-  sqlobj.update('pro_accounts', {id: account.id}, {tempPassHash: tempPassHash});
-  markDirtySessionAccount(account.id);
 }
 
 function setEmail(account, newEmail) {
@@ -271,7 +251,7 @@ function isAccountSignedIn() {
           var email = ssoResult['email'];
           var pass = ssoResult['password'] || "";
           var name = ssoResult['fullname'] || "unnamed";
-          createNewAccount(null, name, email, pass, false, true);
+          createNewAccount(null, name, email, false, true);
           user = getAccountByEmail(email, null);
         }
         
@@ -338,6 +318,131 @@ function requireAdminAccount() {
   }
 }
 
+/*
+ * Given a BrowserID assertion and audience, uses the
+ * verify webservice to validate and extract an email
+ * address. 
+ */
+function verify(assertion, audience) {
+  var body = {
+        assertion: assertion,
+        audience: audience
+      },
+      result,
+      resp,
+      bf,
+      content;
+  if (! assertion) {
+    throw new Error("Unable to verify, missing assertion argument.");
+  }
+  if (! audience) {
+    throw new Error("Unable to verify, missing audience argument.");
+  }
+  result = urlPost("https://browserid.org/verify", body);
+  if (result.error) {
+    throw new Error("Error with https://browserid.org/verify " + result.error.message);
+  } else {
+    bf = net.appjet.common.util.BetterFile.getStreamBytes(result.content);
+    content = new java.lang.String(bf, 'utf-8');
+    try {
+
+        resp = fastJSON.parse(content);
+        if (resp.email) {
+          return resp.email;
+        } else {
+            throw new Error("Expected field email, found none " + content);
+        }
+    } catch (x) {
+        println(x);
+        println("Error, malformed JSON, got " + content);
+    }
+  }
+  throw new Error("BrowserID verification failed.");
+}
+
+/* Every team pad has a duplicate set of user account data...
+ * If this user has other teampad accounts, copy the longest name. */
+function guessName(email) {
+  var name = "";
+  var res = sqlobj.selectMulti('pro_accounts', {email: email, isDeleted: false});
+  if (res) {
+    for (var i=0; i < res.length; i++) {      
+      if (res[i].fullName && res[i].fullName.length > name.length) {        
+        name = res[i].fullName;
+      }
+    }
+  } 
+  return name;
+}
+
+/* Checks configs to determine if this email's hostname
+ * and our team pad domain are eligable for account
+ * auto-creation. Returns true or false.
+ * 
+ * If false, an administrator will need to invite the
+ * user.
+ */
+function shouldAutoCreateAccount(email, domainId) {
+  // mozilla.com, mozilla.org, mozilla.co.uk, mozillafoundation.org, mozilla-japan.org
+  var h = appjet.config['account.autoCreate.email.hostnames'];
+  var emailHostnames = h.split(',').map(function (s) { return trim(s); });
+
+  // security, cabal
+  var s = appjet.config['account.autoCreate.disable.teamPads'];
+  var skipPads = s.split(',').map(function (s) { return trim(s); });
+
+  var domain = domains.getDomainRecord(domainId).subDomain;
+
+  var emailHostname = email.split('@')[1];    
+  if (!!emailHostnames && emailHostnames.length && emailHostnames.length > 0) {
+    // auto create enabled
+    // Some teams don't want auto-create
+    if (!!skipPads && skipPads.length && skipPads.length > 0) {
+      for (var i=0; i < skipPads.length; i++) {
+        if (domain == skipPads[i]) {
+          return false;
+        }
+      }
+    }   
+    // Is this email address eligable?
+    for (var i=0; i < emailHostnames.length; i++) {
+      if (emailHostname == emailHostnames[i]) {
+        return true;
+      }
+    }
+  }
+  return false;
+} 
+
+/* returns undefined on success, error string otherwise. */
+function authenticateBrowserIDSignIn(assertion, audience) {
+  var email, domainId;
+  try {
+    email = verify(assertion, audience);
+  } catch (x) {
+    return "Systems error, please insert another quarter.";
+  }
+  domainId = domains.getRequestDomainId();
+
+  var accountRecord = getAccountByEmail(email, domainId);
+
+  // if this is the first time this user has logged in, create a user
+  // for him/her
+  if (!accountRecord) {
+    if (shouldAutoCreateAccount(email, domainId)) {
+      var fullname = guessName(email);
+      createNewAccount(null, fullname, email, false, true);
+      accountRecord = getAccountByEmail(email, null);
+    } else {
+      var domain = domains.getDomainRecord(domainId).subDomain;
+      return "Account not found: " + email + ", request a new account for " + domain;
+    }
+  }
+    
+  signInSession(accountRecord);
+  return undefined; // success 
+}
+
 /* returns undefined on success, error string otherise. */
 function authenticateSignIn(email, password) {
   // blank passwords are not allowed to sign in.
@@ -373,7 +478,7 @@ function authenticateSignIn(email, password) {
       var ldapPass = "";
       
       // create a new user (skipping validation of email/users/passes)
-      createNewAccount(null, ldapResult.getFullName(), email, ldapPass, false, true);
+      createNewAccount(null, ldapResult.getFullName(), email, false, true);
       accountRecord = getAccountByEmail(email, null);
     }
     
@@ -426,7 +531,6 @@ function authenticateTempSignIn(uid, tempPass) {
 
 function signInSession(account) {
   account.lastLoginDate = new Date();
-  account.tempPassHash = null;
   sqlobj.updateSingle('pro_accounts', {id: account.id}, account);
   reloadSessionAccountData(account.id);
   padusers.notifySignIn();
@@ -512,16 +616,16 @@ function getFullNameById(id) {
   });
 }
 
-function getTempSigninUrl(account, tempPass) {
+function getTempSigninUrl(account) {
   if(appjet.config.listenSecurePort != 0 || appjet.config.useHttpsUrls)
     return [
       'https://', httpsHost(pro_utils.getFullProHost()), '/ep/account/sign-in?',
-      'uid=', account.id, '&tp=', tempPass
+      'uid=', account.id
     ].join('');
   else
     return [
       'http://', httpHost(pro_utils.getFullProHost()), '/ep/account/sign-in?',
-      'uid=', account.id, '&tp=', tempPass
+      'uid=', account.id
     ].join('');
 }
 

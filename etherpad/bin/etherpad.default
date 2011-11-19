@@ -6,7 +6,7 @@ ETHERPAD_USER="etherpad"
 ETHERPAD_GROUP="etherpad"
 
 # Setup paths
-ETHERPAD_HOME=/usr/local/etherpad
+ETHERPAD_HOME=/etherpad
 JAVA=/usr/bin/java
 JAVA_HOME=/usr/lib/jvm/java-6-openjdk
 SCALA=/usr/bin/scala
