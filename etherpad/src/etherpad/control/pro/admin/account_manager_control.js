@@ -1,12 +1,12 @@
 /**
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS-IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,10 +93,10 @@ function render_new_get() {
   if(request.params.fullName)
   {
     getSession().accountManagerFormData = {
-	fullName: request.params.fullName,
-	email: request.params.email,
+        fullName: request.params.fullName,
+        email: request.params.email,
     };
-  }	
+  }
 
   pro_admin_control.renderAdminPage('new-account', {
     oldData: getSession().accountManagerFormData || {},
@@ -174,7 +174,7 @@ function sendWelcomeEmail(account) {
     var d = DIV();
     d.push(P("Warning: unable to send welcome email."));
     if (pne_utils.isPNE()) {
-      d.push(P("Perhaps you have not ", 
+      d.push(P("Perhaps you have not ",
                A({href: '/ep/admin/pne-config'}, "Configured SMTP on this server", "?")));
     }
     getSession().accountManagerWarning = d;
@@ -256,6 +256,3 @@ function render_delete_account_post(accountId) {
   getSession().accountManagerMessage = "The account "+account.fullName+" <"+account.email+"> has been deleted.";
   response.redirect("/ep/admin/account-manager/");
 }
-
-
-

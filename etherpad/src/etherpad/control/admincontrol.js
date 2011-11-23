@@ -1,12 +1,12 @@
 /**
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS-IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -271,9 +271,9 @@ function renderCometStats() {
           fn = ("p"+fn);
           id = id+"%";
         }
-        ul.push(LI( html("<div style='width:99px; text-align:right;'><div style='float:left'>"), id, ": ", 
+        ul.push(LI( html("<div style='width:99px; text-align:right;'><div style='float:left'>"), id, ": ",
                     html("</div>"), " < ", parseInt(0.001 * s[fn]()), html(" ms</div>") ));
-        
+
       });
     }));
     d.push(ul);
@@ -362,11 +362,11 @@ function renderRevenueStats() {
 
 function render_broadcast_message_get() {
   var body = FORM({action: request.path, method: 'post'},
-		  H3('Broadcast Message to All Active Pad Clients:'),
-		  TEXTAREA({name: 'msgtext', style: 'width: 100%; height: 100px;'}),
-		  H3('JavaScript code to be eval()ed on client (optional, be careful!): '),
-		  TEXTAREA({name: 'jscode', style: 'width: 100%; height: 100px;'}),
-		  INPUT({type: 'submit', value: 'Broadcast Now'}));
+                  H3('Broadcast Message to All Active Pad Clients:'),
+                  TEXTAREA({name: 'msgtext', style: 'width: 100%; height: 100px;'}),
+                  H3('JavaScript code to be eval()ed on client (optional, be careful!): '),
+                  TEXTAREA({name: 'jscode', style: 'width: 100%; height: 100px;'}),
+                  INPUT({type: 'submit', value: 'Broadcast Now'}));
   renderHtml("admin/dynamic.ejs",
    {
     config: appjet.config,
@@ -1319,7 +1319,7 @@ function render_pro_domain_accounts() {
       var pwd = request.params["password_" + u.email];
       if (pwd != undefined && pwd != '') {
         /* Ugly hack since we're not on a domain, so we can't really use pro_domains.*  functions */
-	sqlobj.update('pro_accounts', {id: u.id}, {passwordHash: BCrypt.hashpw(pwd, BCrypt.gensalt(10))});
+        sqlobj.update('pro_accounts', {id: u.id}, {passwordHash: BCrypt.hashpw(pwd, BCrypt.gensalt(10))});
       }
     });
   }
@@ -1335,12 +1335,12 @@ function render_pro_domain_accounts() {
   t.push(TR(TH("email"),
             TH("domain"),
             TH("lastLogin"),
-	    TH("password")));
+            TH("password")));
   accounts.forEach(function(u) {
     t.push(TR(TD(u.email),
               TD(domainMap[u.domainId].subDomain+"."+request.domain),
               TD(u.lastLoginDate),
-	      TD(INPUT({type: "password", name: "password_" + u.email}))));
+              TD(INPUT({type: "password", name: "password_" + u.email}))));
   });
 
   b.push(t);
@@ -1539,7 +1539,7 @@ function render_delete_pad() {
   body.push("Delete Pad");
   if (request.isGet) {
     body.push(FORM({method: "POST"},
-                   "padId: ", INPUT({type: "text", name: "padId"}), 
+                   "padId: ", INPUT({type: "text", name: "padId"}),
 BUTTON({name: "delete"}, "Delete")));
   } else if (request.isPost) {
     var localPadId = request.params.padId;

@@ -1,12 +1,12 @@
 /**
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS-IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -130,7 +130,7 @@ function render_update_info_post() {
 
   _redirOnError(pro_accounts.validateEmail(email));
   _redirOnError(pro_accounts.validateFullName(fullName));
-  
+
   pro_accounts.setEmail(getSessionProAccount(), email);
   pro_accounts.setFullName(getSessionProAccount(), fullName);
 
@@ -227,7 +227,7 @@ function render_request_account_captcha_get() {
     rendImage = create_captcha();
     jos = new java.io.ByteArrayOutputStream();
     ImageIO.write(rendImage, 'PNG', jos);
-    
+
     response.setContentType('image/png');
     response.writeBytes(jos.toByteArray());
 }
@@ -248,12 +248,12 @@ function render_request_account_post() {
     var fullname = trim(request.params.fullname);
     var email = trim(request.params.email).toLowerCase();
     var captcha = request.params.captcha;
-    
+
     getSession().tempFormData.fullname = fullname;
     getSession().tempFormData.email = email;
     try {
         isResponseCorrect = appjet.cache.captchaservice.validateResponseForID(getSessionId(), captcha);
-        
+
         if(!isResponseCorrect)
         {
             _redirOnError("Captcha is incorrect!");
@@ -262,17 +262,17 @@ function render_request_account_post() {
         //should not happen, may be thrown if the id is not valid
         _redirOnError("Captcha is incorrect!");
     }
-    
+
     var accountExists = pro_accounts.getAccountByEmail(email, domainId);
     if(typeof accountExists == "undefined")
     {
         var admins = pro_accounts.listAllDomainAdmins(domainId);
-        
+
         admins.forEach(function(admin) {
             var subj = "Account request on "+ appjet.config.customBrandingName +" for "+pro_utils.getFullProDomain()+"!";
             var toAddr = admin.email;
             var fromAddr = pro_utils.getEmailFromAddr();
-            
+
             var body = renderTemplateAsString('pro/account/request-account-email.ejs', {
                 signinLink: pro_accounts.getTempRequestAccountUrl(fullname, email),
                 fullname: fullname,
@@ -282,7 +282,7 @@ function render_request_account_post() {
                 siteName: pro_utils.getFullProDomain()
             });
             var msg = "Account requested! You will get an email on success!";
-            
+
             try {
                 sendEmail(toAddr, fromAddr, subj, {}, body);
             } catch (ex) {
@@ -416,4 +416,3 @@ function render_create_admin_account_post() {
 
   response.redirect("/");
 }
-

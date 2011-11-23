@@ -1,12 +1,12 @@
 /**
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS-IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -203,16 +203,16 @@ function doesAdminExist() {
 
 function attemptSingleSignOn() {
   if(!appjet.config['etherpad.SSOScript']) return null;
-  
+
   // pass request.cookies to a small user script
   var file = appjet.config['etherpad.SSOScript'];
-      
+
   var cmd = exec(file);
-  
+
   // note that this will block until script execution returns
   var result = cmd.write(fastJSON.stringify(request.cookies)).result();
   var val = false;
-  
+
   // we try to parse the result as a JSON string, if not, return null.
   try {
     if(!!(val=fastJSON.parse(result))) {
@@ -254,12 +254,12 @@ function isAccountSignedIn() {
           createNewAccount(null, name, email, false, true);
           user = getAccountByEmail(email, null);
         }
-        
+
         signInSession(user);
         return true;
       }
     }
-    
+
     return false;
   }
 }
@@ -321,7 +321,7 @@ function requireAdminAccount() {
 /*
  * Given a BrowserID assertion and audience, uses the
  * verify webservice to validate and extract an email
- * address. 
+ * address.
  */
 function verify(assertion, audience) {
   var body = {
@@ -366,19 +366,19 @@ function guessName(email) {
   var name = "";
   var res = sqlobj.selectMulti('pro_accounts', {email: email, isDeleted: false});
   if (res) {
-    for (var i=0; i < res.length; i++) {      
-      if (res[i].fullName && res[i].fullName.length > name.length) {        
+    for (var i=0; i < res.length; i++) {
+      if (res[i].fullName && res[i].fullName.length > name.length) {
         name = res[i].fullName;
       }
     }
-  } 
+  }
   return name;
 }
 
 /* Checks configs to determine if this email's hostname
  * and our team pad domain are eligable for account
  * auto-creation. Returns true or false.
- * 
+ *
  * If false, an administrator will need to invite the
  * user.
  */
@@ -393,7 +393,7 @@ function shouldAutoCreateAccount(email, domainId) {
 
   var domain = domains.getDomainRecord(domainId).subDomain;
 
-  var emailHostname = email.split('@')[1];    
+  var emailHostname = email.split('@')[1];
   if (!!emailHostnames && emailHostnames.length && emailHostnames.length > 0) {
     // auto create enabled
     // Some teams don't want auto-create
@@ -403,7 +403,7 @@ function shouldAutoCreateAccount(email, domainId) {
           return false;
         }
       }
-    }   
+    }
     // Is this email address eligable?
     for (var i=0; i < emailHostnames.length; i++) {
       if (emailHostname == emailHostnames[i]) {
@@ -412,7 +412,7 @@ function shouldAutoCreateAccount(email, domainId) {
     }
   }
   return false;
-} 
+}
 
 /* returns undefined on success, error string otherwise. */
 function authenticateBrowserIDSignIn(assertion, audience) {
@@ -438,28 +438,28 @@ function authenticateBrowserIDSignIn(assertion, audience) {
       return "Account not found: " + email + ", request a new account for " + domain;
     }
   }
-    
+
   signInSession(accountRecord);
-  return undefined; // success 
+  return undefined; // success
 }
 
 /* returns undefined on success, error string otherise. */
 function authenticateSignIn(email, password) {
   // blank passwords are not allowed to sign in.
   if (password == "") return "Please provide a password.";
-  
+
   // If the email ends with our ldap suffix...
   var isLdapSuffix = getLDAP() && getLDAP().isLDAPSuffix(email);
 
   if(isLdapSuffix && !getLDAP()) {
     return "LDAP not yet configured. Please contact your system admininstrator.";
   }
-  
+
   // if there is an error in the LDAP configuration, return the error message
   if(getLDAP() && getLDAP().error) {
     return getLDAP().error + " Please contact your system administrator.";
   }
-  
+
   if(isLdapSuffix && getLDAP()) {
     var ldapuser = email.substr(0, email.indexOf(getLDAP().getLDAPSuffix()));
     var ldapResult = getLDAP().login(ldapuser, password);
@@ -476,16 +476,16 @@ function authenticateSignIn(email, password) {
       // password to store in database -- a blank password means the user
       // cannot authenticate normally (e.g. must go through SSO or LDAP)
       var ldapPass = "";
-      
+
       // create a new user (skipping validation of email/users/passes)
       createNewAccount(null, ldapResult.getFullName(), email, false, true);
       accountRecord = getAccountByEmail(email, null);
     }
-    
+
     signInSession(accountRecord);
     return undefined; // success
   }
-  
+
   var accountRecord = getAccountByEmail(email, null);
   if (!accountRecord) {
     return "Account not found: "+email;
@@ -712,9 +712,3 @@ function updateCachedActiveCount(domainId) {
     c.count = getActiveCount(domainId);
   });
 }
-
-
-
-
-
-
