@@ -385,11 +385,17 @@ function guessName(email) {
 function shouldAutoCreateAccount(email, domainId) {
   // mozilla.com, mozilla.org, mozilla.co.uk, mozillafoundation.org, mozilla-japan.org
   var h = appjet.config['account.autoCreate.email.hostnames'];
+  if (! h) return false;
   var emailHostnames = h.split(',').map(function (s) { return trim(s); });
 
   // security, cabal
-  var s = appjet.config['account.autoCreate.disable.teamPads'];
-  var skipPads = s.split(',').map(function (s) { return trim(s); });
+  var s = appjet.config['account.autoCreate.disable.teamPads'],
+      skipPads;
+  if (s) {
+    skipPads = s.split(',').map(function (s) { return trim(s); });
+  } else {
+    skipPads = [];
+  }
 
   var domain = domains.getDomainRecord(domainId).subDomain;
 
