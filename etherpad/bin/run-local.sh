@@ -17,15 +17,15 @@
 mkdir -p data/appjet
 
 # JVM heap memory limit (actually reserved during startup)
-MXRAM="1G"
+#MXRAM="1G"
 # maximum thread count for etherpad (should be roughly memory in MB / 4)
-MAXTHREADS="250"
+#MAXTHREADS="250"
 
 if [ -x "/usr/bin/perl" ]; then
 	if [ -e "/proc/meminfo" ]; then
 	# compute the MXRAM parameter:
 	# default it to half of the usable real free memory,
-	# but at least 100M and up to 1024M
+	# but at least 100M and up to 2048M
 	# TODO: this should be rewritten in awk to always work (awk is part of coreutils, perl is not)
 	MXRAM=$(cat /proc/meminfo | perl -ne '
 		BEGIN {
@@ -44,7 +44,7 @@ if [ -x "/usr/bin/perl" ]; then
 		END {
 			$usable_free = ($free + $buffers + $cached)/2;
 			$usable_free = 100 if ($usable_free < 100);
-			$usable_free = 1024 if ($usable_free > 1024);
+			$usable_free = 2048 if ($usable_free > 2048);
 			print int($usable_free)."M\n"
 		};')
 
