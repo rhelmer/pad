@@ -16,10 +16,9 @@
 
 mkdir -p data/appjet
 
-# JVM heap memory limit (actually reserved during startup)
-#MXRAM="1G"
-# maximum thread count for etherpad (should be roughly memory in MB / 4)
-#MAXTHREADS="250"
+# set some reasonable defaults... OVERRIDDEN BELOW
+MXRAM="512M"
+MAXTHREADS="128"
 
 if [ -x "/usr/bin/perl" ]; then
 	if [ -e "/proc/meminfo" ]; then
@@ -110,6 +109,7 @@ exec $JAVA -classpath $CP \
     -server \
     -Xmx${MXRAM} \
     -Xms${MXRAM} \
+    -d64 \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
     -XX:+UseConcMarkSweepGC \
@@ -122,6 +122,6 @@ exec $JAVA -classpath $CP \
     $JAVA_OPTS \
     net.appjet.oui.main \
     --configFile=${cfg_file} \
-    --maxThreads=${MAXTHREADS}
+    --maxThreads=${MAXTHREADS} \
     "$@"
 
