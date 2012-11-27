@@ -18,13 +18,13 @@ mkdir -p data/appjet
 
 # set some reasonable defaults... OVERRIDDEN BELOW
 MXRAM="512M"
-MAXTHREADS="128"
+#MAXTHREADS="128" # not using
 
 if [ -x "/usr/bin/perl" ]; then
 	if [ -e "/proc/meminfo" ]; then
 	# compute the MXRAM parameter:
 	# default it to half of the usable real free memory,
-	# but at least 100M and up to 2048M
+	# but at least 100M and up to 10GB
 	# TODO: this should be rewritten in awk to always work (awk is part of coreutils, perl is not)
 	MXRAM=$(cat /proc/meminfo | perl -ne '
 		BEGIN {
@@ -43,17 +43,17 @@ if [ -x "/usr/bin/perl" ]; then
 		END {
 			$usable_free = ($free + $buffers + $cached)/2;
 			$usable_free = 100 if ($usable_free < 100);
-			$usable_free = 2048 if ($usable_free > 2048);
+			$usable_free = 10240 if ($usable_free > 10240);
 			print int($usable_free)."M\n"
 		};')
-
-	MAXTHREADS=$(echo "$MXRAM" | perl -ne '
-			s/[^\d]//;
-			$maxthreads = int($_/4);
-			if ($maxthreads < 5)
-				{ $maxthreads = 5 }
-			print $maxthreads;
-		')
+    #
+	#MAXTHREADS=$(echo "$MXRAM" | perl -ne '
+	#		s/[^\d]//;
+	#		$maxthreads = int($_/4);
+	#		if ($maxthreads < 5)
+	#			{ $maxthreads = 5 }
+	#		print $maxthreads;
+	#	')
 	fi
 fi
 
@@ -101,7 +101,7 @@ if [[ $1 == "--cfg" ]]; then
 fi
 
 echo "Maximum ram: $MXRAM"
-echo "Maximum thread count: $MAXTHREADS"
+#echo "Maximum thread count: $MAXTHREADS"
 
 echo "Using config file: ${cfg_file}"
 
@@ -109,12 +109,10 @@ exec $JAVA -classpath $CP \
     -server \
     -Xmx${MXRAM} \
     -Xms${MXRAM} \
-    -d64 \
+    -XX:NewRatio=3 \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
     -XX:+UseConcMarkSweepGC \
-    -XX:+CMSIncrementalMode \
-    -XX:CMSIncrementalSafetyFactor=50 \
     -XX:+PrintGCDetails \
     -XX:+PrintGCTimeStamps \
     -Xloggc:./data/logs/backend/jvm-gc.log \
@@ -122,6 +120,5 @@ exec $JAVA -classpath $CP \
     $JAVA_OPTS \
     net.appjet.oui.main \
     --configFile=${cfg_file} \
-    --maxThreads=${MAXTHREADS} \
     "$@"
 
