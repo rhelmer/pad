@@ -43,7 +43,7 @@ if [ -x "/usr/bin/perl" ]; then
 		END {
 			$usable_free = ($free + $buffers + $cached)/2;
 			$usable_free = 100 if ($usable_free < 100);
-			$usable_free = 10240 if ($usable_free > 10240);
+			$usable_free = 20480 if ($usable_free > 20480);
 			print int($usable_free)."M\n"
 		};')
     #
@@ -109,7 +109,7 @@ exec $JAVA -classpath $CP \
     -server \
     -Xmx${MXRAM} \
     -Xms${MXRAM} \
-    -XX:NewRatio=3 \
+    -XX:NewRatio=2 \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
     -XX:+UseConcMarkSweepGC \
