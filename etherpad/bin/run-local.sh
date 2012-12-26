@@ -1,13 +1,13 @@
 #!/bin/bash -e
 
 #  Copyright 2009 Google Inc.
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS-IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ MXRAM="512M"
 if [ -x "/usr/bin/perl" ]; then
 	if [ -e "/proc/meminfo" ]; then
 	# compute the MXRAM parameter:
-	# default it to half of the usable real free memory,
-	# but at least 100M and up to 10GB
+	# default it to 80% of usable memory,
+	# but at least 100M and up to 20GB
 	# TODO: this should be rewritten in awk to always work (awk is part of coreutils, perl is not)
 	MXRAM=$(cat /proc/meminfo | perl -ne '
 		BEGIN {
@@ -41,7 +41,7 @@ if [ -x "/usr/bin/perl" ]; then
 			{ $cached = $1/1024 };
 
 		END {
-			$usable_free = ($free + $buffers + $cached)/2;
+			$usable_free = ($free + $buffers + $cached)/1.25;
 			$usable_free = 100 if ($usable_free < 100);
 			$usable_free = 20480 if ($usable_free > 20480);
 			print int($usable_free)."M\n"
@@ -105,6 +105,15 @@ echo "Maximum ram: $MXRAM"
 
 echo "Using config file: ${cfg_file}"
 
+# Swapped CMS for G1GC... old line was:
+# -XX:+UseConcMarkSweepGC
+# now is:
+# -XX:+UseG1GC
+# Main benefit is G1GC is compacting, CMS is not.
+# Should reduce fragmentation, and hopefully crashing due to the
+# eventual inability to find a large enough free blob to allocate to
+# requires Java 7
+
 exec $JAVA -classpath $CP \
     -server \
     -Xmx${MXRAM} \
@@ -112,9 +121,10 @@ exec $JAVA -classpath $CP \
     -XX:NewRatio=2 \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
-    -XX:+UseConcMarkSweepGC \
+    -XX:+UseG1GC \
     -XX:+PrintGCDetails \
     -XX:+PrintGCTimeStamps \
+    -XX:+PrintGCDateStamps \
     -Xloggc:./data/logs/backend/jvm-gc.log \
     -Dappjet.jmxremote=true \
     $JAVA_OPTS \
