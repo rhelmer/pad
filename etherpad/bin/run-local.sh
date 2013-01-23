@@ -113,6 +113,7 @@ echo "Using config file: ${cfg_file}"
 # Should reduce fragmentation, and hopefully crashing due to the
 # eventual inability to find a large enough free blob to allocate to
 # requires Java 7
+# EDIT: can't use Java 7, seems to break CAPTCHA library... reverting :(
 
 exec $JAVA -classpath $CP \
     -server \
@@ -121,7 +122,7 @@ exec $JAVA -classpath $CP \
     -XX:NewRatio=2 \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
-    -XX:+UseG1GC \
+    -XX:+UseConcMarkSweepGC \
     -XX:+PrintGCDetails \
     -XX:+PrintGCTimeStamps \
     -XX:+PrintGCDateStamps \
