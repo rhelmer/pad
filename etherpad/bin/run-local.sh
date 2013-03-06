@@ -22,10 +22,6 @@ MXRAM="512M"
 
 if [ -x "/usr/bin/perl" ]; then
 	if [ -e "/proc/meminfo" ]; then
-	# compute the MXRAM parameter:
-	# default it to 80% of usable memory,
-	# but at least 100M and up to 20GB
-	# TODO: this should be rewritten in awk to always work (awk is part of coreutils, perl is not)
 	MXRAM=$(cat /proc/meminfo | perl -ne '
 		BEGIN {
 			$free = 0;
@@ -45,17 +41,18 @@ if [ -x "/usr/bin/perl" ]; then
 			$usable_free = 100 if ($usable_free < 100);
 			$usable_free = 20480 if ($usable_free > 20480);
 			print int($usable_free)."M\n"
-		};')
-    #
-	#MAXTHREADS=$(echo "$MXRAM" | perl -ne '
-	#		s/[^\d]//;
-	#		$maxthreads = int($_/4);
-	#		if ($maxthreads < 5)
-	#			{ $maxthreads = 5 }
-	#		print $maxthreads;
-	#	')
+		};
+    ')
+    MAXPERM=$(echo "$MXRAM" | perl -ne '
+        s/[^\d]//;
+        $maxperm = int($_/64);
+        if ($maxperm < 32)
+            { $maxperm = 32 }
+        print $maxperm."M\n";
+    ')
 	fi
 fi
+
 
 if [ ! -z $1 ]; then
     if [ ! '-' = `echo $1 | head -c 1` ]; then
@@ -120,13 +117,15 @@ exec $JAVA -classpath $CP \
     -Xmx${MXRAM} \
     -Xms${MXRAM} \
     -XX:NewRatio=2 \
+    -XX:MaxPermSize=${MAXPERM} \
     -Djava.awt.headless=true \
     -XX:MaxGCPauseMillis=500 \
     -XX:+UseConcMarkSweepGC \
+    -XX:+CMSClassUnloadingEnabled \
     -XX:+PrintGCDetails \
     -XX:+PrintGCTimeStamps \
     -XX:+PrintGCDateStamps \
-    -Xloggc:./data/logs/backend/jvm-gc.log \
+    -Xloggc:/var/log/etherpad/`hostname`-gc-`date +%Y%m%d%H%M`.log \
     -Dappjet.jmxremote=true \
     $JAVA_OPTS \
     net.appjet.oui.main \
